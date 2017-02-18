@@ -1,5 +1,6 @@
 package com.example.gan.testtestrun;
 
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -46,10 +47,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnStop.setOnClickListener(this);
     }
 
-    private void addData(){
-        lineSeries.appendData(new DataPoint(lastX++, RANDOM.nextDouble()*10d), false, 20);
-    }
-
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -74,25 +71,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void generateData() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while(isStop == false)
-                //for(int i=0; i<10; i++)
-                {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            addData();
-                        }
-                    });
-                    try {
-                        Thread.sleep(600);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
+        new GetDataAsync().execute(lastX);
+    }
+
+    private class GetDataAsync extends AsyncTask<Integer, Void, DataPoint>
+    {
+
+        @Override
+        protected DataPoint doInBackground(Integer... params) {
+            try {
+                Thread.sleep(600);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-        }).start();
+            return new DataPoint(lastX++, RANDOM.nextDouble()*10d);
+        }
+
+        @Override
+        protected void onPostExecute(DataPoint dataPoint) {
+            lineSeries.appendData(dataPoint, false, 20);
+            if(isStop == false)
+                new GetDataAsync().execute(lastX);
+        }
     }
 }
