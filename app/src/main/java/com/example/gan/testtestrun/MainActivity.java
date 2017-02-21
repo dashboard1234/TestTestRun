@@ -1,8 +1,10 @@
 package com.example.gan.testtestrun;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -23,6 +25,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final Random RANDOM  = new Random();
     private int lastX = 0;
     private boolean isStop = true;
+    private static final String TAG = MainActivity.class.getName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,8 +46,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         viewPort.setScrollable(true);
         Button btnStart = (Button)findViewById(R.id.btnStart);
         Button btnStop = (Button)findViewById(R.id.btnStop);
+        Button btnRetrieve = (Button)findViewById(R.id.btnRetrieve);
         btnStart.setOnClickListener(this);
         btnStop.setOnClickListener(this);
+
+        // test anonymous click listener
+        btnRetrieve.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "Retrieve clicked");
+                Intent intent = new Intent(MainActivity.this, RetrieveActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     @Override
@@ -67,7 +81,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onResume() {
         super.onResume();
-        generateData();
+        //generateData();
     }
 
     private void generateData() {
@@ -89,7 +103,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         protected void onPostExecute(DataPoint dataPoint) {
-            lineSeries.appendData(dataPoint, false, 20);
+            if(lastX >= 50)
+                lineSeries.appendData(dataPoint, true, 51);
+            else
+                lineSeries.appendData(dataPoint, false, 51);
             if(isStop == false)
                 new GetDataAsync().execute(lastX);
         }
