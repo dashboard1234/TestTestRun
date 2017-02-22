@@ -1,18 +1,23 @@
 package com.example.gan.testtestrun;
 
+import android.content.ContentValues;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Debug;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.Viewport;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
+import java.util.Iterator;
 import java.util.Random;
 
 import static com.example.gan.testtestrun.R.id.btnStart;
@@ -22,6 +27,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private GraphView graph;
     private LineGraphSeries<DataPoint> lineSeries;
+    private DataPoint[] dataArray;
     private static final Random RANDOM  = new Random();
     private int lastX = 0;
     private boolean isStop = true;
@@ -54,7 +60,58 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnRetrieve.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d(TAG, "Retrieve clicked");
+                int deletedCount = 0;
+//                deletedCount = getContentResolver().delete(SignalProvider.CONTENT_URI, null, null);
+//                Toast.makeText(getBaseContext(), deletedCount + "rows deleted", Toast.LENGTH_SHORT).show();
+//                Log.d(TAG, deletedCount + "rows deleted");
+
+                // store current graph data points to content provider
+                // clear first, then rewrite
+                new Thread(){
+                    @Override
+                    public void run() {
+                        //Debug.waitForDebugger();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                int deletedCount = getContentResolver().delete(SignalProvider.CONTENT_URI, null, null);
+                                Toast.makeText(getBaseContext(), deletedCount + " rows deleted", Toast.LENGTH_SHORT).show();
+                                Log.d(TAG, deletedCount + " rows deleted");
+                                try {
+                                    Thread.sleep(700);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+                    }
+                }.start();
+
+                // insert all rows
+                //final int[] count = {0};
+                new Thread(){
+                    @Override
+                    public void run() {
+
+                        //for(int i = startIdx; i< lastX; i++) {
+                        for(final Iterator<DataPoint> iterator = lineSeries.getValues(lineSeries.getLowestValueX(), lineSeries.getHighestValueX()); iterator.hasNext();){
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    DataPoint point = iterator.next();
+                                    ContentValues values = new ContentValues();
+                                    values.put(SignalProvider.COL_TICK, point.getX());
+                                    values.put(SignalProvider.COL_SIGNAL, point.getY());
+                                    getContentResolver().insert(SignalProvider.CONTENT_URI, values);
+                                }
+                            });
+                            //count[0]++;
+                        }
+
+                    }
+                }.start();
+                Toast.makeText(getBaseContext(), "rows inserted", Toast.LENGTH_SHORT).show();
+                //Log.d(TAG, count[0] + "rows inserted");
                 Intent intent = new Intent(MainActivity.this, RetrieveActivity.class);
                 startActivity(intent);
             }
