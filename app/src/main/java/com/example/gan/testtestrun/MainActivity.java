@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnStart.setOnClickListener(this);
         btnStop.setOnClickListener(this);
 
+        Log.d(TAG, "program starts");
         // test anonymous click listener
         btnRetrieve.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -77,6 +78,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 int deletedCount = getContentResolver().delete(SignalProvider.CONTENT_URI, null, null);
                                 Toast.makeText(getBaseContext(), deletedCount + " rows deleted", Toast.LENGTH_SHORT).show();
                                 Log.d(TAG, deletedCount + " rows deleted");
+
+                                // insert all rows, run in sequence after delete all rows
+                                final int[] count = {0};
+                                new Thread(){
+                                    @Override
+                                    public void run() {
+
+                                        //for(int i = startIdx; i< lastX; i++) {
+                                        //for(final Iterator<DataPoint> iterator = lineSeries.getValues(lineSeries.getLowestValueX(), lineSeries.getHighestValueX()); iterator.hasNext();){
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                for(final Iterator<DataPoint> iterator = lineSeries.getValues(lineSeries.getLowestValueX(), lineSeries.getHighestValueX()); iterator.hasNext();) {
+                                                    DataPoint point = iterator.next();
+                                                    ContentValues values = new ContentValues();
+                                                    values.put(SignalProvider.COL_TICK, point.getX());
+                                                    values.put(SignalProvider.COL_SIGNAL, point.getY());
+                                                    getContentResolver().insert(SignalProvider.CONTENT_URI, values);
+                                                    count[0]++;
+                                                }
+                                                Toast.makeText(getBaseContext(), count[0] + " rows inserted", Toast.LENGTH_SHORT).show();
+                                                Log.d(TAG, count[0] + " rows inserted");
+                                            }
+                                        });
+
+                                    }
+                                }.start();
+
                                 try {
                                     Thread.sleep(700);
                                 } catch (InterruptedException e) {
@@ -87,31 +116,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }.start();
 
-                // insert all rows
-                //final int[] count = {0};
-                new Thread(){
-                    @Override
-                    public void run() {
-
-                        //for(int i = startIdx; i< lastX; i++) {
-                        for(final Iterator<DataPoint> iterator = lineSeries.getValues(lineSeries.getLowestValueX(), lineSeries.getHighestValueX()); iterator.hasNext();){
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    DataPoint point = iterator.next();
-                                    ContentValues values = new ContentValues();
-                                    values.put(SignalProvider.COL_TICK, point.getX());
-                                    values.put(SignalProvider.COL_SIGNAL, point.getY());
-                                    getContentResolver().insert(SignalProvider.CONTENT_URI, values);
-                                }
-                            });
-                            //count[0]++;
-                        }
-
-                    }
-                }.start();
-                Toast.makeText(getBaseContext(), "rows inserted", Toast.LENGTH_SHORT).show();
-                //Log.d(TAG, count[0] + "rows inserted");
+//                // insert all rows
+//                final int[] count = {0};
+//                new Thread(){
+//                    @Override
+//                    public void run() {
+//
+//                        //for(int i = startIdx; i< lastX; i++) {
+//                        //for(final Iterator<DataPoint> iterator = lineSeries.getValues(lineSeries.getLowestValueX(), lineSeries.getHighestValueX()); iterator.hasNext();){
+//                            runOnUiThread(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    for(final Iterator<DataPoint> iterator = lineSeries.getValues(lineSeries.getLowestValueX(), lineSeries.getHighestValueX()); iterator.hasNext();) {
+//                                        DataPoint point = iterator.next();
+//                                        ContentValues values = new ContentValues();
+//                                        values.put(SignalProvider.COL_TICK, point.getX());
+//                                        values.put(SignalProvider.COL_SIGNAL, point.getY());
+//                                        getContentResolver().insert(SignalProvider.CONTENT_URI, values);
+//                                        count[0]++;
+//                                    }
+//                                    Toast.makeText(getBaseContext(), count[0] + " rows inserted", Toast.LENGTH_SHORT).show();
+//                                    Log.d(TAG, count[0] + " rows inserted");
+//                                }
+//                            });
+//
+//                    }
+//                }.start();
                 Intent intent = new Intent(MainActivity.this, RetrieveActivity.class);
                 startActivity(intent);
             }
