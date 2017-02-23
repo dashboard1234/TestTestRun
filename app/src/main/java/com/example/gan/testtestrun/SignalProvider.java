@@ -90,14 +90,14 @@ public class SignalProvider extends ContentProvider {
         switch(uriMatch.match(uri))
         {
             case SIGNAL_BY_ID:
-                qb.appendWhere(COL_ID + "=" + uri.getLastPathSegment());
+                qb.appendWhere(COL_TICK + "=" + uri.getLastPathSegment());
                 break;
             case SIGNALS:
                 break;
             case SIGNAL_RANGE:
                 String fromId = uri.getPathSegments().get(1);
                 String toId = uri.getPathSegments().get(2);
-                qb.appendWhere(COL_ID + ">=" + fromId + " AND " + COL_ID + "<=" + toId);
+                qb.appendWhere(COL_TICK + ">=" + fromId + " AND " + COL_TICK + "<=" + toId);
                 break;
             default:
                 Log.e(TAG, "Unspported uri: " + uri);
