@@ -1,8 +1,12 @@
 <resources>
-    <string name="app_name">TestTestRun</string>
+    <string name="app_name">Testtestrun</string>
     <string name="start">Start</string>
     <string name="stop">Stop</string>
     <string name="title_activity_retrieve">RetrieveActivity</string>
     <string name="settings">Settings</string>
     <string name="about">About</string>
+    <string name="signal_strength">Signal Strength</string>
+    <string name="from">From</string>
+    <string name="to">To</string>
+    <string name="get_signal">Get Signal</string>
 </resources>

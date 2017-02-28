@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">试运行</string>
+    <string name="about">关于</string>
+    <string name="settings">用户设置</string>
+    <string name="start">开始</string>
+    <string name="stop">结束</string>
+    <string name="title_activity_retrieve">提取数据</string>
+    <string name="signal_strength">信号强度</string>
+    <string name="from">从</string>
+    <string name="to">到</string>
+    <string name="get_signal">取信号</string>
+</resources>
