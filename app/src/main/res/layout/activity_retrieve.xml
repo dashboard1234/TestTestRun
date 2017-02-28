@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/activity_retrieve"
+        android:layout_width="match_parent"
+        android:layout_height="53dp"
+        android:orientation="horizontal"
+        tools:context="com.example.gan.testtestrun.RetrieveActivity">
+
+        <TextView
+            android:id="@+id/textFrom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/editText"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginBottom="11dp"
+            android:text="TextView" />
+
+        <EditText
+            android:id="@+id/edtFrom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="From"
+            android:inputType="number" />
+
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/textTo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/editText"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginBottom="11dp"
+            android:text="TextView" />
+
+        <EditText
+            android:id="@+id/edtTo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="To"
+            android:inputType="number" />
+    </LinearLayout>
+
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/graph"
+        android:layout_marginBottom="100dp"
+        android:layout_width="match_parent"
+        android:layout_height="200dip"
+        android:layout_marginTop="100dp" />
+    <Button
+        android:text="Get Signal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/btnSignal" />
+</LinearLayout>
+
