@@ -8,14 +8,13 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.speech.tts.TextToSpeech;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
 import java.util.Locale;
 
-public class MonitorActivity extends AppCompatActivity {
+public class MonitorActivity extends BaseActivity {
     private final static String TAG = MonitorActivity.class.getName();
     private TextView tvSignal;
     WifiManager wifiManager;
