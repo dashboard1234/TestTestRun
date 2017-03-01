@@ -32,6 +32,7 @@ public class BaseActivity extends AppCompatActivity {
                 getBaseContext().getResources().getDisplayMetrics());
     }
 
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();

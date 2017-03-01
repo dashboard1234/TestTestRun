@@ -3,10 +3,11 @@
     <EditTextPreference android:title="Your Name"
         android:key="username"
         android:summary="The name you prefer to be called"></EditTextPreference>
-    <CheckBoxPreference android:title="Application Updates"
-        android:defaultValue="false"
-        android:summary="This option if selected will allow the application to check for latest versions."
-        android:key="applicationUpdates" />
+    <ListPreference android:title="Language"
+        android:summary="Select your home wifi connection"
+        android:key="wifiConnections"
+        android:entries="@array/wifiNames"
+        android:entryValues="@array/wifiIDs" />
     <ListPreference android:title="Language"
         android:summary="Select language to speak reminding messages"
         android:key="language"

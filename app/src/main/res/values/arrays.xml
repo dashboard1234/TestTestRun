@@ -8,4 +8,6 @@
         <item>en</item>
         <item>zh</item>
     </string-array>
+    <string-array name="wifiNames"></string-array>
+    <string-array name="wifiIDs"></string-array>
 </resources>
