@@ -9,4 +9,6 @@
     <string name="from">From</string>
     <string name="to">To</string>
     <string name="get_signal">Get Signal</string>
+    <string name="permission_fine_location_rationale">grant location permission allows wifi scan</string>
+    <string name="ok">Ok</string>
 </resources>
