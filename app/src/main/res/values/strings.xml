@@ -11,4 +11,8 @@
     <string name="get_signal">Get Signal</string>
     <string name="permission_fine_location_rationale">grant location permission allows wifi scan</string>
     <string name="ok">Ok</string>
+    <string name="monitor_wifi">Monitor Wifi</string>
+    <string name="go_to_retrieve">Go to Retrieve</string>
+    <string name="Done">Done</string>
+    <string name="no_wifi_signal">No Wifi signal</string>
 </resources>

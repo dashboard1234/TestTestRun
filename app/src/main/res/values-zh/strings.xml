@@ -10,4 +10,10 @@
     <string name="from">从</string>
     <string name="to">到</string>
     <string name="get_signal">取信号</string>
+    <string name="go_to_retrieve">提取信号</string>
+    <string name="monitor_wifi">WI-FI信息</string>
+    <string name="ok">确定</string>
+    <string name="permission_fine_location_rationale"></string>
+    <string name="Done">确定</string>
+    <string name="no_wifi_signal">无无线网信号</string>
 </resources>
