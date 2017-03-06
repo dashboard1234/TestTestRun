@@ -39,8 +39,8 @@ import java.util.List;
 public class WifiSettingActivity extends AppCompatActivity {
     private static final int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 100;
     private static final int PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION = 200;
-    private static final String WIFI_PREFERENCE = "wifiPref";
-    private static final String SELECTED_WIFI = "selectedwifi";
+    public static final String WIFI_PREFERENCE = "wifiPref";
+    public static final String SELECTED_WIFI = "selectedwifi";
     private WifiManager wifiManager;
     private List<ScanResult> wifiList;
     private View rootView;
@@ -170,6 +170,7 @@ public class WifiSettingActivity extends AppCompatActivity {
                     final List<String> wifiInfo = new ArrayList<String>();
                     for (int i = 0; i < wifiList.size(); i++) {
                         String ssid = wifiList.get(i).SSID;
+                        ssid.replace("\"", "");
                         if(!TextUtils.isEmpty(ssid) && !wifiInfo.contains(ssid))
                             wifiInfo.add(ssid);
                     }

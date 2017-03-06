@@ -1,14 +1,18 @@
 package com.example.gan.testtestrun;
 
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.speech.tts.TextToSpeech;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -21,6 +25,7 @@ public class MonitorActivity extends BaseActivity {
     WifiReceiver receiver;
     TextToSpeech speech;
     boolean reminderTriggered = false;
+    String selectedWifi = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +34,11 @@ public class MonitorActivity extends BaseActivity {
         tvSignal = (TextView)findViewById(R.id.tvSignal);
         wifiManager = (WifiManager)getSystemService(WIFI_SERVICE);
         receiver = new WifiReceiver();
+
+        SharedPreferences sharedPreferences = getSharedPreferences(WifiSettingActivity.WIFI_PREFERENCE, Context.MODE_PRIVATE);
+        if(sharedPreferences != null)
+            selectedWifi = sharedPreferences.getString(WifiSettingActivity.SELECTED_WIFI, "");
+
         speech=new TextToSpeech(this, new TextToSpeech.OnInitListener() {
 
             @Override
@@ -42,7 +52,7 @@ public class MonitorActivity extends BaseActivity {
                     }
                     else{
                         //speech.speak("Master, please don't forget your keys", TextToSpeech.QUEUE_FLUSH, null);
-                        speech.speak("主人，别忘了带钥匙", TextToSpeech.QUEUE_FLUSH, null);
+                        //speech.speak("主人，别忘了带钥匙", TextToSpeech.QUEUE_FLUSH, null);
                     }
                 }
                 else
@@ -50,8 +60,6 @@ public class MonitorActivity extends BaseActivity {
             }
         });
 
-
-        //speech.speak("Master, please don't forget your keys", TextToSpeech.QUEUE_FLUSH, null);
     }
 
     @Override
@@ -70,6 +78,19 @@ public class MonitorActivity extends BaseActivity {
         unregisterReceiver(receiver);
     }
 
+    private void displayAlert(){
+        new AlertDialog.Builder(this)
+                .setTitle("Please select home wifi")
+                .setMessage("Go to settings to select your home wifi or connect to your home wifi")
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                })
+                .show();
+    }
+
     private class WifiReceiver extends BroadcastReceiver{
 
         @Override
@@ -77,8 +98,12 @@ public class MonitorActivity extends BaseActivity {
             switch (intent.getAction())
             {
                 case WifiManager.RSSI_CHANGED_ACTION:
-                    float percent = getSignalStrength(intent);
                     String name = getWifiNetworkName(context);
+//                    if(!TextUtils.isEmpty(selectedWifi) && !selectedWifi.equals(name))
+//                    {
+//                        displayAlert();
+//                    }
+                    float percent = getSignalStrength(intent);
                     tvSignal.setText(name + ": " + percent);
                     // ToDo: rework logic
                     if(percent<0.4 && !reminderTriggered) {

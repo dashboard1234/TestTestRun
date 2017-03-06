@@ -3,11 +3,12 @@
     <EditTextPreference android:title="Your Name"
         android:key="username"
         android:summary="The name you prefer to be called"></EditTextPreference>
-    <ListPreference android:title="Connections"
+    <ListPreference android:title=""
         android:summary="Select your home wifi connection"
         android:key="wifiConnections"
         android:entries="@array/wifiNames"
-        android:entryValues="@array/wifiIDs" />
+        android:entryValues="@array/wifiIDs"
+        />
     <ListPreference android:title="Language"
         android:summary="Select language to speak reminding messages"
         android:key="language"
