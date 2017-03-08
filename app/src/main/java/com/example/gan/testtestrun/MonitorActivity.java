@@ -23,6 +23,8 @@ public class MonitorActivity extends BaseActivity {
     private TextView tvSignal;
     WifiManager wifiManager;
     WifiReceiver receiver;
+    WifiReceiver wifiStateReceiver;
+    WifiReceiver wifiSignalReceiver;
     TextToSpeech speech;
     boolean reminderTriggered = false;
     String selectedWifi = "";
@@ -34,6 +36,8 @@ public class MonitorActivity extends BaseActivity {
         tvSignal = (TextView)findViewById(R.id.tvSignal);
         wifiManager = (WifiManager)getSystemService(WIFI_SERVICE);
         receiver = new WifiReceiver();
+        wifiSignalReceiver = new WifiReceiver();
+        wifiStateReceiver = new WifiReceiver();
 
         SharedPreferences sharedPreferences = getSharedPreferences(WifiSettingActivity.WIFI_PREFERENCE, Context.MODE_PRIVATE);
         if(sharedPreferences != null)
@@ -65,17 +69,17 @@ public class MonitorActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        IntentFilter filter = new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION);
-        filter.addAction(WifiManager.RSSI_CHANGED_ACTION);
-//        if(receiver == null)
-//            receiver = new WifiReceiver();
-        registerReceiver(receiver, filter);
+//        IntentFilter filter = new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION);
+//        filter.addAction(WifiManager.RSSI_CHANGED_ACTION);
+//        registerReceiver(receiver, filter);
+        wifiStateReceiver.registerState();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(receiver);
+        //unregisterReceiver(receiver);
+        wifiStateReceiver.unregisterState();
     }
 
     private void displayAlert(){
@@ -92,6 +96,39 @@ public class MonitorActivity extends BaseActivity {
     }
 
     private class WifiReceiver extends BroadcastReceiver{
+        boolean mIsSigReceiverRegistered;
+        boolean mIsStateReceiverRegistered;
+
+        public Intent registerState()
+        {
+            if(mIsStateReceiverRegistered)
+                return null;
+            IntentFilter intentFilter = new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION);
+            mIsStateReceiverRegistered = true;
+            return registerReceiver(this, intentFilter);
+        }
+        public Intent registerSignal()
+        {
+            if(mIsSigReceiverRegistered)
+                return null;
+            IntentFilter intentFilter = new IntentFilter(WifiManager.RSSI_CHANGED_ACTION);
+            mIsSigReceiverRegistered = true;
+            return registerReceiver(this, intentFilter);
+        }
+
+        public void unregisterState()
+        {
+            if(mIsStateReceiverRegistered)
+                unregisterReceiver(this);
+            mIsStateReceiverRegistered = false;
+        }
+
+        public void unregisterSignal()
+        {
+            if(mIsSigReceiverRegistered)
+                unregisterReceiver(this);
+            mIsSigReceiverRegistered = false;
+        }
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -99,10 +136,6 @@ public class MonitorActivity extends BaseActivity {
             {
                 case WifiManager.RSSI_CHANGED_ACTION:
                     String name = getWifiNetworkName(context);
-//                    if(!TextUtils.isEmpty(selectedWifi) && !selectedWifi.equals(name))
-//                    {
-//                        displayAlert();
-//                    }
                     float percent = getSignalStrength(intent);
                     tvSignal.setText(name + ": " + percent);
                     // ToDo: rework logic
@@ -116,6 +149,20 @@ public class MonitorActivity extends BaseActivity {
                 case WifiManager.NETWORK_STATE_CHANGED_ACTION:
                     boolean connected = getWifiConnected(intent);
                     tvSignal.setText(connected ? "Wifi connected" : "Wifi disconnected");
+                    if(connected) {
+                        String connectedWifiName = getWifiNetworkName(context);
+                        if (!TextUtils.isEmpty(selectedWifi) && !selectedWifi.equals(connectedWifiName)) {
+                            unregisterSignal();
+                            tvSignal.setText("Stop listening wifi signal");
+                            break;
+                        }
+                        else if(!TextUtils.isEmpty(selectedWifi) && selectedWifi.equals(connectedWifiName)) {
+                            registerSignal();
+                            break;
+                        }
+                    }
+                    unregisterSignal();
+                    tvSignal.setText("Stop listening wifi signal");
                     break;
                 default:
                     Log.d(TAG, "Invalid action type");
