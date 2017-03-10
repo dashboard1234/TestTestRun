@@ -13,7 +13,10 @@
     <string name="go_to_retrieve">提取信号</string>
     <string name="monitor_wifi">WI-FI信息</string>
     <string name="ok">确定</string>
-    <string name="permission_fine_location_rationale"></string>
+    <string name="permission_fine_location_rationale">允许地址权限</string>
     <string name="Done">确定</string>
     <string name="no_wifi_signal">无无线网信号</string>
+    <string name="stop_listen_signal">停止读取无线网信号</string>
+    <string name="startService">启动背景程序</string>
+    <string name="stopService">结束背景程序</string>
 </resources>

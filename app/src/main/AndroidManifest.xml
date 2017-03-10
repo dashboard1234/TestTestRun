@@ -27,8 +27,19 @@
 
         <activity android:name=".MonitorActivity" />
         <activity android:name=".BaseActivity" />
-        <activity android:name=".MyPreferencesActivity" android:noHistory="true" />
-        <activity android:name=".WifiSettingActivity"></activity>
+        <activity
+            android:name=".MyPreferencesActivity"
+            android:noHistory="true" />
+        <activity android:name=".WifiSettingActivity" />
+
+        <service
+            android:name=".WifiMonitorService"
+            android:exported="false"></service>
+        <!--<receiver android:name="com.example.gan.testtestrun.MainActivity$WifiReceiver" android:enabled="true" >-->
+            <!--<intent-filter>-->
+                <!--<action  android:name="WifiMonitorService.ACTION_TIMER" />-->
+            <!--</intent-filter>-->
+        <!--</receiver>-->
     </application>
 
 </manifest>

@@ -15,4 +15,7 @@
     <string name="go_to_retrieve">Go to Retrieve</string>
     <string name="Done">Done</string>
     <string name="no_wifi_signal">No Wifi signal</string>
+    <string name="stop_listen_signal">Stopped listening wifi signal</string>
+    <string name="startService">Start Service</string>
+    <string name="stopService">Stop Service</string>
 </resources>

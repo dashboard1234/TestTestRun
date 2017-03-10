@@ -10,16 +10,9 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.gan.testtestrun.MainActivity">
-    <!--<android.support.v7.widget.Toolbar-->
-        <!--android:id="@+id/my_toolbar"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="?attr/actionBarSize"-->
-        <!--android:background="?attr/colorPrimary"-->
-        <!--android:elevation="4dp"-->
-        <!--android:theme="@style/ThemeOverlay.AppCompat.ActionBar"-->
-        <!--app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>-->
+
     <Button
-        android:text="@string/start"
+        android:text="@string/startService"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
@@ -31,7 +24,7 @@
         android:id="@+id/btnStart" />
 
     <Button
-        android:text="@string/stop"
+        android:text="@string/stopService"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignTop="@+id/btnStart"
@@ -41,27 +34,26 @@
         android:layout_marginStart="58dp"
         android:id="@+id/btnStop" />
 
-    <com.jjoe64.graphview.GraphView
-        android:layout_width="match_parent"
-        android:layout_height="200dip"
-        android:layout_marginTop="100dp"
-        android:id="@+id/graph" />
-
-    <Button
-        android:text="@string/go_to_retrieve"
+    <TextView
+        android:text="TextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/graph"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="24dp"
-        android:id="@+id/btnRetrieve" />
+        android:id="@+id/tvSignal"
+        android:layout_below="@+id/btnStop"
+        android:layout_alignLeft="@+id/btnStop"
+        android:layout_alignStart="@+id/btnStop"
+        android:layout_marginTop="33dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
 
-    <Button
-        android:text="@string/monitor_wifi"
+    <TextView
+        android:text="@string/signal_strength"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/btnRetrieve"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="14dp"
-        android:id="@+id/btnWifi" />
+        android:id="@+id/textView"
+        android:layout_alignBaseline="@+id/tvSignal"
+        android:layout_alignBottom="@+id/tvSignal"
+        android:layout_alignLeft="@+id/btnStart"
+        android:layout_alignStart="@+id/btnStart" />
+
 </RelativeLayout>

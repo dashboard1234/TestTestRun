@@ -153,7 +153,7 @@ public class MonitorActivity extends BaseActivity {
                         String connectedWifiName = getWifiNetworkName(context);
                         if (!TextUtils.isEmpty(selectedWifi) && !selectedWifi.equals(connectedWifiName)) {
                             unregisterSignal();
-                            tvSignal.setText("Stop listening wifi signal");
+                            tvSignal.setText(R.string.stop_listen_signal);
                             break;
                         }
                         else if(!TextUtils.isEmpty(selectedWifi) && selectedWifi.equals(connectedWifiName)) {
@@ -162,7 +162,7 @@ public class MonitorActivity extends BaseActivity {
                         }
                     }
                     unregisterSignal();
-                    tvSignal.setText("Stop listening wifi signal");
+                    tvSignal.setText(R.string.stop_listen_signal);
                     break;
                 default:
                     Log.d(TAG, "Invalid action type");
