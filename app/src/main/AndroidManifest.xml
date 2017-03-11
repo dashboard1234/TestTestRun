@@ -34,12 +34,16 @@
 
         <service
             android:name=".WifiMonitorService"
+            android:exported="false" />
+        <!-- <receiver android:name="com.example.gan.testtestrun.MainActivity$WifiReceiver" android:enabled="true" > -->
+        <!-- <intent-filter> -->
+        <!-- <action  android:name="WifiMonitorService.ACTION_TIMER" /> -->
+        <!-- </intent-filter> -->
+        <!-- </receiver> -->
+        <service
+            android:name=".WifiService"
+            android:enabled="true"
             android:exported="false"></service>
-        <!--<receiver android:name="com.example.gan.testtestrun.MainActivity$WifiReceiver" android:enabled="true" >-->
-            <!--<intent-filter>-->
-                <!--<action  android:name="WifiMonitorService.ACTION_TIMER" />-->
-            <!--</intent-filter>-->
-        <!--</receiver>-->
     </application>
 
 </manifest>
