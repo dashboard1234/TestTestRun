@@ -20,10 +20,29 @@ public class WifiMonitorService extends IntentService {
     public static final String PARAM_TIMER = "com.example.gan.testtestrun.extra.PARAM1";
     public static final String PARAM_WIFI = "com.example.gan.testtestrun.extra.PARAM2";
 
+    private boolean isStopTimer;
+
     public WifiMonitorService() {
         super("WifiMonitorService");
     }
 
+ //   @Override
+//    public int onStartCommand(Intent intent, int flags, int startId) {
+//        return START_STICKY;
+//    }
+
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        isStopTimer = false;
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        isStopTimer = true;
+    }
 
     @Override
     protected void onHandleIntent(Intent intent) {
@@ -46,6 +65,8 @@ public class WifiMonitorService extends IntentService {
     private void handleActionTimer(Integer timerCount) {
         // TODO: Handle action Foo
         for(int i = 0; i<timerCount; i++){
+            if(isStopTimer)
+                break;
             try {
                 Thread.sleep(1000);
                 Intent intent = new Intent(ACTION_TIMER2);
@@ -53,6 +74,7 @@ public class WifiMonitorService extends IntentService {
                 //intent.setClass(this, WifiMonitorService.class);
                 intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+                //sendBroadcast(intent);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

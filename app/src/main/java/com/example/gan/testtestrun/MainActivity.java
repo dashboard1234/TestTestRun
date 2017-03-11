@@ -11,6 +11,7 @@ import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -18,26 +19,32 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import static com.example.gan.testtestrun.R.id.btnStart;
+
 
 public class MainActivity extends BaseActivity implements View.OnClickListener {
     private boolean isStop = true;
     private static final String TAG = MainActivity.class.getName();
     private TextView tvSignal;
+    private TextView tvTimer;
     WifiManager wifiManager;
-    WifiReceiver receiver;
-    WifiReceiver wifiStateReceiver;
-    WifiReceiver wifiSignalReceiver;
+    //WifiReceiver receiver;
+    //WifiReceiver wifiStateReceiver;
+    //WifiReceiver wifiSignalReceiver;
     TextToSpeech speech;
     boolean reminderTriggered = false;
     String selectedWifi = "";
+    private Button btnStart;
+    private Button btnStop;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Button btnStart = (Button)findViewById(R.id.btnStart);
-        Button btnStop = (Button)findViewById(R.id.btnStop);
-        receiver = new WifiReceiver();
+        tvTimer = (TextView)findViewById(R.id.tvTimer);
+        btnStart = (Button)findViewById(R.id.btnStart);
+        btnStop = (Button)findViewById(R.id.btnStop);
+        //receiver = new WifiReceiver();
 
         btnStart.setOnClickListener(this);
         btnStop.setOnClickListener(this);
@@ -54,14 +61,14 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     @Override
     protected void onResume() {
         super.onResume();
-        IntentFilter intentFilter = new IntentFilter(WifiMonitorService.ACTION_TIMER);
-        registerReceiver(receiver, intentFilter);
+        IntentFilter intentFilter = new IntentFilter(WifiMonitorService.ACTION_TIMER2);
+        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, intentFilter);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(receiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
     }
 
     @Override
@@ -74,16 +81,21 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                 intent.putExtra(WifiMonitorService.PARAM_TIMER, 120);
                 //intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
                 startService(intent);
+                btnStart.setEnabled(false);
+                btnStop.setEnabled(true);
                 break;
             case R.id.btnStop:
                 stopService(new Intent(getBaseContext(), WifiMonitorService.class));
+                btnStart.setEnabled(true);
+                btnStop.setEnabled(false);
                 break;
             default:
                 break;
         }
     }
 
-    private class WifiReceiver extends BroadcastReceiver {
+    //private class WifiReceiver extends BroadcastReceiver {
+    private BroadcastReceiver receiver = new BroadcastReceiver(){
         boolean mIsSigReceiverRegistered;
         boolean mIsStateReceiverRegistered;
 
@@ -124,7 +136,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             {
                 case WifiMonitorService.ACTION_TIMER2:
                     Integer timerCount = intent.getIntExtra(WifiMonitorService.PARAM_TIMER, 0);
-                    tvSignal.setText(timerCount + " seconds");
+                    tvTimer.setText(timerCount + " seconds");
                     break;
                 case WifiManager.RSSI_CHANGED_ACTION:
                     String name = getWifiNetworkName(context);
@@ -161,7 +173,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                     break;
             }
         }
-    }
+    };
 
     private float getSignalStrength(Intent intent){
         float level = intent.getIntExtra(WifiManager.EXTRA_NEW_RSSI, -1);

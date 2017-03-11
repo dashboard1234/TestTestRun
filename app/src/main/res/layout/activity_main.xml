@@ -35,10 +35,10 @@
         android:id="@+id/btnStop" />
 
     <TextView
-        android:text="TextView"
+        android:text="Timer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/tvSignal"
+        android:id="@+id/tvTimer"
         android:layout_below="@+id/btnStop"
         android:layout_alignLeft="@+id/btnStop"
         android:layout_alignStart="@+id/btnStop"
@@ -50,9 +50,9 @@
         android:text="@string/signal_strength"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/textView"
-        android:layout_alignBaseline="@+id/tvSignal"
-        android:layout_alignBottom="@+id/tvSignal"
+        android:id="@+id/tvSignal"
+        android:layout_alignBaseline="@+id/tvTimer"
+        android:layout_alignBottom="@+id/tvTimer"
         android:layout_alignLeft="@+id/btnStart"
         android:layout_alignStart="@+id/btnStart" />
 
