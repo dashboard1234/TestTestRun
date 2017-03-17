@@ -94,17 +94,24 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     @Override
     protected void onResume() {
         super.onResume();
-        //IntentFilter intentFilter = new IntentFilter(WifiMonitorService.ACTION_TIMER2);
         IntentFilter intentFilter = new IntentFilter(WifiService.ACTION_TIMER);
-        LocalBroadcastManager.getInstance(this).registerReceiver(timerReceiver, intentFilter);
+        //LocalBroadcastManager.getInstance(this).registerReceiver(timerReceiver, intentFilter);
+        registerReceiver(timerReceiver, intentFilter);
         //receiver.registerState();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(timerReceiver);
+        //LocalBroadcastManager.getInstance(this).unregisterReceiver(timerReceiver);
+        unregisterReceiver(timerReceiver);
         //receiver.unregisterState();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        speech.shutdown();
     }
 
     @Override
@@ -135,7 +142,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         }
     }
 
-    private class WifiReceiver extends BroadcastReceiver {
+    public class WifiReceiver extends BroadcastReceiver {
     //private BroadcastReceiver receiver = new BroadcastReceiver(){
         boolean mIsSigReceiverRegistered;
         boolean mIsStateReceiverRegistered;

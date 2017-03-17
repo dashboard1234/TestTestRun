@@ -40,8 +40,8 @@ public class WifiService extends Service {
                                 Intent intentBroadcast = new Intent(ACTION_TIMER);
                                 intentBroadcast.putExtra(PARAM_TIMER, i);
                                 intentBroadcast.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-                                LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(intentBroadcast);
-                                //sendBroadcast(intent);
+                                //LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(intentBroadcast);
+                                sendBroadcast(intentBroadcast);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -54,7 +54,8 @@ public class WifiService extends Service {
             }
         }
 
-        return START_STICKY;
+        //return START_STICKY;
+        return START_REDELIVER_INTENT;
     }
 
     @Override
