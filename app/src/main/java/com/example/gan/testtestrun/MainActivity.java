@@ -31,10 +31,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     private TextView tvSignal;
     private TextView tvTimer;
     WifiManager wifiManager;
-    WifiReceiver receiver;
-    WifiReceiver timerReceiver;
-//    WifiReceiver wifiStateReceiver;
-//    WifiReceiver wifiSignalReceiver;
+
     TextToSpeech speech;
     boolean reminderTriggered = false;
     String selectedWifi = "";
@@ -49,8 +46,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         tvSignal = (TextView)findViewById(R.id.tvSignal);
         btnStart = (Button)findViewById(R.id.btnStart);
         btnStop = (Button)findViewById(R.id.btnStop);
-        receiver = new WifiReceiver();
-        timerReceiver = new WifiReceiver();
 
         wifiManager = (WifiManager)getSystemService(WIFI_SERVICE);
         SharedPreferences sharedPreferences = getSharedPreferences(WifiSettingActivity.WIFI_PREFERENCE, Context.MODE_PRIVATE);
@@ -80,7 +75,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
         btnStart.setOnClickListener(this);
         btnStop.setOnClickListener(this);
-        //if(HelperUtility.isServiceRunning(this, WifiMonitorService.class)){
         if(HelperUtility.isServiceRunning(this, WifiService.class)){
             btnStart.setEnabled(false);
             btnStop.setEnabled(true);
@@ -94,18 +88,17 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     @Override
     protected void onResume() {
         super.onResume();
-        IntentFilter intentFilter = new IntentFilter(WifiService.ACTION_TIMER);
-        //LocalBroadcastManager.getInstance(this).registerReceiver(timerReceiver, intentFilter);
-        registerReceiver(timerReceiver, intentFilter);
-        //receiver.registerState();
+        IntentFilter intentFilter = new IntentFilter(WifiService.ACTION_WIFI);
+        // use LocalBroadcastManager is performance is much better than global register
+        //registerReceiver(receiver, intentFilter);
+        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, intentFilter);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        //LocalBroadcastManager.getInstance(this).unregisterReceiver(timerReceiver);
-        unregisterReceiver(timerReceiver);
-        //receiver.unregisterState();
+        //unregisterReceiver(receiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
     }
 
     @Override
@@ -118,21 +111,14 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btnStart:
-                //Intent intent = new Intent(getBaseContext(), WifiMonitorService.class);
                 Intent intent = new Intent(getBaseContext(), WifiService.class);
-                //intent.setAction(HelperUtility.INTENT_ACTION_MONITOR_WIFI);
-                intent.setAction(WifiMonitorService.ACTION_TIMER);
-                intent.putExtra(WifiMonitorService.PARAM_TIMER, 120);
-                //intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-
-
+                intent.setAction(WifiService.ACTION_WIFI);
                 startService(intent);
 
                 btnStart.setEnabled(false);
                 btnStop.setEnabled(true);
                 break;
             case R.id.btnStop:
-                //stopService(new Intent(getBaseContext(), WifiMonitorService.class));
                 stopService(new Intent(getBaseContext(), WifiService.class));
                 btnStart.setEnabled(true);
                 btnStop.setEnabled(false);
@@ -142,115 +128,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         }
     }
 
-    public class WifiReceiver extends BroadcastReceiver {
-    //private BroadcastReceiver receiver = new BroadcastReceiver(){
-        boolean mIsSigReceiverRegistered;
-        boolean mIsStateReceiverRegistered;
-
-        //public void registerState()
-        public  Intent registerState()
-        {
-            if(mIsStateReceiverRegistered)
-                return null;
-                IntentFilter intentFilter = new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION);
-                mIsStateReceiverRegistered = true;
-                return registerReceiver(this, intentFilter);
-                //LocalBroadcastManager.getInstance(getBaseContext()).registerReceiver(this, intentFilter);
-
-        }
-        //public void registerSignal()
-        public Intent registerSignal()
-        {
-            if(mIsSigReceiverRegistered)
-                return null;
-                IntentFilter intentFilter = new IntentFilter(WifiManager.RSSI_CHANGED_ACTION);
-                mIsSigReceiverRegistered = true;
-                return registerReceiver(this, intentFilter);
-                //LocalBroadcastManager.getInstance(getBaseContext()).registerReceiver(this, intentFilter);
-        }
-
-        public void unregisterState()
-        {
-            if(mIsStateReceiverRegistered)
-                unregisterReceiver(this);
-            mIsStateReceiverRegistered = false;
-        }
-
-        public void unregisterSignal()
-        {
-            if(mIsSigReceiverRegistered)
-                unregisterReceiver(this);
-            mIsSigReceiverRegistered = false;
-        }
-
+    private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            switch (intent.getAction())
-            {
-                case WifiService.ACTION_TIMER:
-                    //Integer timerCount = intent.getIntExtra(WifiMonitorService.PARAM_TIMER, 0);
-                    Integer timerCount = intent.getIntExtra(WifiService.PARAM_TIMER, 0);
-                    tvTimer.setText(timerCount + " seconds");
-                    break;
-                case WifiManager.RSSI_CHANGED_ACTION:
-                    String name = getWifiNetworkName(context);
-                    float percent = getSignalStrength(intent);
-                    tvSignal.setText(name + ": " + percent);
-                    // ToDo: rework logic
-                    if(percent<0.4 && !reminderTriggered) {
-                        speech.speak("主人，别忘了带钥匙", TextToSpeech.QUEUE_FLUSH, null);
-                        reminderTriggered = true;
-                    }
-                    if(reminderTriggered && percent > 0.6)
-                        reminderTriggered = false;
-                    break;
-                case WifiManager.NETWORK_STATE_CHANGED_ACTION:
-                    boolean connected = getWifiConnected(intent);
-                    tvSignal.setText(connected ? "Wifi connected" : "Wifi disconnected");
-                    if(connected) {
-                        String connectedWifiName = getWifiNetworkName(context);
-                        if (!TextUtils.isEmpty(selectedWifi) && !selectedWifi.equals(connectedWifiName)) {
-                            unregisterSignal();
-                            tvSignal.setText(R.string.stop_listen_signal);
-                            break;
-                        }
-                        else if(!TextUtils.isEmpty(selectedWifi) && selectedWifi.equals(connectedWifiName)) {
-                            registerSignal();
-                            break;
-                        }
-                    }
-                    unregisterSignal();
-                    tvSignal.setText(R.string.stop_listen_signal);
-                    break;
-                default:
-                    Log.d(TAG, "Invalid action type");
-                    break;
-            }
+            String displayText = intent.getStringExtra(WifiService.PARAM_WIFI);
+            tvSignal.setText(displayText);
         }
     };
-
-    private float getSignalStrength(Intent intent){
-        float level = intent.getIntExtra(WifiManager.EXTRA_NEW_RSSI, -1);
-        level = WifiManager.calculateSignalLevel((int)level, 100);
-        level /= 100.0;
-        return level;
-    }
-
-    private boolean getWifiConnected(Intent intent){
-        NetworkInfo info = (NetworkInfo)intent.getExtras().get(WifiManager.EXTRA_NETWORK_INFO);
-        if(info == null)
-            return false;
-        return info.getState().equals(NetworkInfo.State.CONNECTED);
-    }
-
-    public String getWifiNetworkName(Context context){
-        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        String ssid = wifiInfo.getSSID();
-        //for some reason SSID comes wrapped in double-quotes
-        if( ssid == null ){
-            ssid = "";
-        }
-        return ssid.replace("\"", "");
-    }
-
 }
