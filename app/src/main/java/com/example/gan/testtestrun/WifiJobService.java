@@ -50,9 +50,9 @@ public class WifiJobService extends JobService {
     @Override
     public boolean onStartJob(final JobParameters params) {
         jobParameters = params;
-//        Intent intent = new Intent(getBaseContext(), WifiJobService.class);
-//        intent.setAction(WifiJobService.ACTION_WIFI);
-//        startService(intent);
+        Intent intent = new Intent(getBaseContext(), WifiJobService.class);
+        intent.setAction(WifiJobService.ACTION_WIFI);
+        startService(intent);
 
 //        new Thread(new Runnable() {
 //                    @Override
@@ -184,8 +184,11 @@ public class WifiJobService extends JobService {
                     LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(intentSignalChange);
                     //sendBroadcast(intentSignalChange);
                     // ToDo: rework logic
-                    //if(percent<0.4 && !reminderTriggered) {
-                    if(percent<0.9) {
+                    if(percent<0.4 && !reminderTriggered) {
+                    //if(percent<0.9) {
+                        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+                        PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "TAG");
+                        wl.acquire(15000);
                         speech.speak("主人，别忘了带钥匙", TextToSpeech.QUEUE_FLUSH, null);
 
                         PendingIntent mainIntent = PendingIntent.getActivity(context, 0, new Intent(context, MainActivity.class), 0);
