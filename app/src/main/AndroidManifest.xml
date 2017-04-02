@@ -22,11 +22,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".RetrieveActivity" />
-
-        <provider
-            android:name=".SignalProvider"
-            android:authorities="com.example.gan.testtestrun.SignalProvider" />
 
         <activity android:name=".BaseActivity" />
         <activity
@@ -34,11 +29,6 @@
             android:noHistory="true" />
         <activity android:name=".WifiSettingActivity" />
 
-        <service
-            android:name=".WifiService"
-
-            android:enabled="true"
-            android:exported="false"></service>
         <service
             android:name=".WifiJobService"
             android:enabled="true"

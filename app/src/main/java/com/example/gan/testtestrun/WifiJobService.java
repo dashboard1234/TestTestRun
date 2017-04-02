@@ -1,32 +1,35 @@
-package com.example.gan.testtestrun;
 
-import android.app.Activity;
-import android.app.AlarmManager;
-import android.app.KeyguardManager;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.Service;
-import android.app.job.JobParameters;
-import android.app.job.JobService;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.net.NetworkInfo;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
-import android.os.IBinder;
-import android.os.PowerManager;
-import android.os.SystemClock;
-import android.speech.tts.TextToSpeech;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.LocalBroadcastManager;
-import android.text.TextUtils;
-import android.util.Log;
-import android.view.WindowManager;
+        package com.example.gan.testtestrun;
 
-import java.util.Locale;
+        import android.app.Activity;
+        import android.app.AlarmManager;
+        import android.app.KeyguardManager;
+        import android.app.Notification;
+        import android.app.NotificationManager;
+        import android.app.PendingIntent;
+        import android.app.Service;
+        import android.app.job.JobParameters;
+        import android.app.job.JobService;
+        import android.content.BroadcastReceiver;
+        import android.content.Context;
+        import android.content.Intent;
+        import android.content.IntentFilter;
+        import android.content.SharedPreferences;
+        import android.net.NetworkInfo;
+        import android.net.wifi.WifiInfo;
+        import android.net.wifi.WifiManager;
+        import android.os.Handler;
+        import android.os.IBinder;
+        import android.os.PowerManager;
+        import android.os.SystemClock;
+        import android.speech.tts.TextToSpeech;
+        import android.support.v4.app.NotificationCompat;
+        import android.support.v4.content.LocalBroadcastManager;
+        import android.text.TextUtils;
+        import android.util.Log;
+        import android.view.WindowManager;
+
+        import java.util.Locale;
 
 public class WifiJobService extends JobService {
     public static final String ACTION_TIMER = "com.example.gan.testtestrun.action.timer";
@@ -46,41 +49,40 @@ public class WifiJobService extends JobService {
     boolean reminderTriggered;
     TextToSpeech speech;
     JobParameters jobParameters;
+    private SleepReceiver sleepReceiver;
+    PowerManager.WakeLock wakeLock;
 
     @Override
     public boolean onStartJob(final JobParameters params) {
         jobParameters = params;
-        Intent intent = new Intent(getBaseContext(), WifiJobService.class);
-        intent.setAction(WifiJobService.ACTION_WIFI);
-        startService(intent);
+//        Intent intent = new Intent(getBaseContext(), WifiJobService.class);
+//        intent.setAction(WifiJobService.ACTION_WIFI);
+//        startService(intent);
+        //startForeground(Process.myPid(), new Notification());
 
-//        new Thread(new Runnable() {
-//                    @Override
-//                    public void run() {
-////                        isStopTimer = false;
-////                        receiver = new WifiReceiver();
-////                        reminderTriggered = false;
-////                        receiver.registerState();
+//        Intent notificationIntent = new Intent(this, WifiJobService.class);
 //
-//                        while(!isStopTimer){
-//                            try {
-//                                Thread.sleep(3000);
-//                                //speech.speak("倒车，请注意", TextToSpeech.QUEUE_FLUSH, null);
-//                            } catch (InterruptedException e) {
-//                                e.printStackTrace();
-//                            }
-//                        }
-//                        stopSelf();
-//                        jobFinished(params, false);
-//                    }
-//                }).start();
-        // return false means job is done,
+//        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+//                notificationIntent, 0);
+//
+//        Notification notification = new NotificationCompat.Builder(this)
+//                //.setSmallIcon(R.mipmap.app_icon)
+//                .setContentTitle("My Awesome App")
+//                .setContentText("Doing some work...")
+//                .setContentIntent(pendingIntent).build();
+//
+//        startForeground(1337, notification);
+
+        receiver.registerState();
+        wakeLock.acquire();
+
         return true;
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
         receiver.unregisterState();
+        releaseLock(wakeLock);
         return true;
     }
 
@@ -89,6 +91,7 @@ public class WifiJobService extends JobService {
         super.onCreate();
         isStopTimer = false;
         receiver = new WifiReceiver();
+        sleepReceiver = new SleepReceiver();
         reminderTriggered = false;
 
         speech=new TextToSpeech(this, new TextToSpeech.OnInitListener() {
@@ -117,6 +120,10 @@ public class WifiJobService extends JobService {
         if(sharedPreferences != null)
             selectedWifi = sharedPreferences.getString(WifiSettingActivity.SELECTED_WIFI, "");
         receiver.registerState();
+
+        PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "TAG");
+        registerReceiver(sleepReceiver, new IntentFilter(Intent.ACTION_SCREEN_OFF));
     }
 
     @Override
@@ -125,7 +132,33 @@ public class WifiJobService extends JobService {
         isStopTimer = true;
         receiver.unregisterState();
         speech.shutdown();
+        releaseLock(wakeLock);
         jobFinished(jobParameters, false);
+    }
+
+    public void releaseLock(PowerManager.WakeLock wakelock)
+    {
+        if(wakelock.isHeld())
+            wakelock.release();
+    }
+
+    private class SleepReceiver extends BroadcastReceiver{
+
+        private static final long WAIT_FOR_SYS_CLEAN_UP_DELAY = 1000;
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(!intent.getAction().equals(Intent.ACTION_SCREEN_OFF))
+                return;
+            Runnable runnable = new Runnable() {
+                @Override
+                public void run() {
+                    receiver.unregisterState();
+                    receiver.registerState();
+                }
+            };
+            new Handler().postDelayed(runnable, WAIT_FOR_SYS_CLEAN_UP_DELAY);
+        }
     }
 
     private class WifiReceiver extends BroadcastReceiver {
@@ -137,7 +170,7 @@ public class WifiJobService extends JobService {
         public  Intent registerState()
         {
             if(mIsStateReceiverRegistered)
-            //    return;
+                //    return;
                 return null;
             IntentFilter intentFilter = new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION);
             mIsStateReceiverRegistered = true;
@@ -149,7 +182,7 @@ public class WifiJobService extends JobService {
         public Intent registerSignal()
         {
             if(mIsSigReceiverRegistered)
-             //   return;
+                //   return;
                 return null;
             IntentFilter intentFilter = new IntentFilter(WifiManager.RSSI_CHANGED_ACTION);
             mIsSigReceiverRegistered = true;
@@ -182,13 +215,14 @@ public class WifiJobService extends JobService {
                     intentSignalChange.putExtra(PARAM_WIFI, name + ": " + percent);
                     intentSignalChange.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
                     LocalBroadcastManager.getInstance(getBaseContext()).sendBroadcast(intentSignalChange);
+
                     //sendBroadcast(intentSignalChange);
                     // ToDo: rework logic
                     if(percent<0.4 && !reminderTriggered) {
-                    //if(percent<0.9) {
-                        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-                        PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "TAG");
-                        wl.acquire(15000);
+                        //if(percent<0.9) {
+//                        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+//                        PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "TAG");
+//                        wl.acquire(15000);
                         speech.speak("主人，别忘了带钥匙", TextToSpeech.QUEUE_FLUSH, null);
 
                         PendingIntent mainIntent = PendingIntent.getActivity(context, 0, new Intent(context, MainActivity.class), 0);
@@ -230,6 +264,7 @@ public class WifiJobService extends JobService {
                             break;
                         }
                         else if(!TextUtils.isEmpty(selectedWifi) && selectedWifi.equals(connectedWifiName)) {
+                            unregisterSignal();
                             registerSignal();
                             break;
                         }
@@ -283,4 +318,5 @@ public class WifiJobService extends JobService {
     }
 
 }
+
 

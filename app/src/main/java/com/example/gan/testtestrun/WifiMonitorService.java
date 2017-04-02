@@ -16,7 +16,6 @@ import android.support.v4.content.LocalBroadcastManager;
  * helper methods.
  */
 
-// this Intent service is not used, using WifiService
 public class WifiMonitorService extends IntentService {
     public static final String ACTION_TIMER = "com.example.gan.testtestrun.action.timer";
     public static final String ACTION_TIMER2 = "com.example.gan.testtestrun.action.timer2";
