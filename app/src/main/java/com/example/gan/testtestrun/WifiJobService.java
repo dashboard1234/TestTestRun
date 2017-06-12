@@ -29,7 +29,7 @@
 
         import java.util.Locale;
 
-public class WifiJobService extends JobService {
+public class WifiJobService extends Service {
     public static final String ACTION_TIMER = "com.example.gan.testtestrun.action.timer";
     public static final String ACTION_WIFI = "com.example.gan.testtestrun.action.wifi";
     public static final Integer NOTIFY_ID = 1234;
@@ -51,26 +51,9 @@ public class WifiJobService extends JobService {
     PowerManager.WakeLock wakeLock;
 
     @Override
-    public boolean onStartJob(final JobParameters params) {
+    public int onStartCommand(Intent intent, int flags, int startId) {
         isStopTimer = false;
-        jobParameters = params;
-//        Intent intent = new Intent(getBaseContext(), WifiJobService.class);
-//        intent.setAction(WifiJobService.ACTION_WIFI);
-//        startService(intent);
-        //startForeground(Process.myPid(), new Notification());
-
-//        Intent notificationIntent = new Intent(this, WifiJobService.class);
-//
-//        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
-//                notificationIntent, 0);
-//
-//        Notification notification = new NotificationCompat.Builder(this)
-//                //.setSmallIcon(R.mipmap.app_icon)
-//                .setContentTitle("My Awesome App")
-//                .setContentText("Doing some work...")
-//                .setContentIntent(pendingIntent).build();
-//
-//        startForeground(1337, notification);
+        //jobParameters = params;
 
         new Thread(new Runnable() {
             @Override
@@ -85,19 +68,14 @@ public class WifiJobService extends JobService {
                 }
             }
         }).start();
-
-        //receiver.registerState();
-        //wakeLock.acquire();
-
-        return true;
+        //return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Override
-    public boolean onStopJob(JobParameters params) {
-        receiver.unregisterState();
-        //releaseLock(wakeLock);
-        isStopTimer = true;
-        return true;
+    public IBinder onBind(Intent intent) {
+        // TODO: Return the communication channel to the service.
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
@@ -131,7 +109,7 @@ public class WifiJobService extends JobService {
             selectedWifi = sharedPreferences.getString(WifiSettingActivity.SELECTED_WIFI, "");
         receiver.registerState();
 
-        PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
+        //PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
         //wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "TAG");
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_SCREEN_OFF);
@@ -145,14 +123,7 @@ public class WifiJobService extends JobService {
         //isStopTimer = true;
         receiver.unregisterState();
         speech.shutdown();
-        //releaseLock(wakeLock);
-        jobFinished(jobParameters, false);
-    }
-
-    public void releaseLock(PowerManager.WakeLock wakelock)
-    {
-        if(wakelock.isHeld())
-            wakelock.release();
+        //jobFinished(jobParameters, false);
     }
 
     public class RepeatOnSleep extends IntentService{
@@ -325,15 +296,17 @@ public class WifiJobService extends JobService {
                         String connectedWifiName = getWifiNetworkName(context);
                         if (!TextUtils.isEmpty(selectedWifi) && !selectedWifi.equals(connectedWifiName)) {
                             unregisterSignal();
-                            break;
+                            //break;
                         }
                         else if(!TextUtils.isEmpty(selectedWifi) && selectedWifi.equals(connectedWifiName)) {
                             unregisterSignal();
                             registerSignal();
-                            break;
+                            //break;
                         }
                     }
-                    unregisterSignal();
+                    else {
+                        unregisterSignal();
+                    }
                     break;
                 default:
                     Log.d(TAG, "Invalid action type");
@@ -341,21 +314,6 @@ public class WifiJobService extends JobService {
             }
         }
     }
-
-//    private void acquireWakelock()
-//    {
-//        KeyguardManager lock = ((KeyguardManager) getSystemService(Activity.KEYGUARD_SERVICE)).newKeyguardLock(KEYGUARD_SERVICE);
-//        PowerManager powerManager = ((PowerManager) getSystemService(Context.POWER_SERVICE));
-//        PowerManager.WakeLock wake = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "TAG");
-//
-//        //lock.disableKeyguard();
-//        wake.acquire();
-//        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
-//                | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
-//                | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-//                | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-//                | WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON);
-//    }
 
     private float getSignalStrength(Intent intent){
         float level = intent.getIntExtra(WifiManager.EXTRA_NEW_RSSI, -1);
