@@ -13,6 +13,12 @@
         import android.content.Intent;
         import android.content.IntentFilter;
         import android.content.SharedPreferences;
+        import android.hardware.Sensor;
+        import android.hardware.SensorEvent;
+        import android.hardware.SensorEventListener;
+        import android.hardware.SensorManager;
+        import android.hardware.TriggerEvent;
+        import android.hardware.TriggerEventListener;
         import android.net.NetworkInfo;
         import android.net.wifi.WifiInfo;
         import android.net.wifi.WifiManager;
@@ -49,6 +55,9 @@ public class WifiJobService extends Service {
     JobParameters jobParameters;
     private SleepReceiver sleepReceiver;
     PowerManager.WakeLock wakeLock;
+    private SensorManager sensorManager;
+    // significant motion sensor is wake up sensor, it does not do batch sensor, waitless
+    private Sensor sensor;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -86,6 +95,10 @@ public class WifiJobService extends Service {
         sleepReceiver = new SleepReceiver();
         reminderTriggered = false;
 
+        sensorManager =
+                (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION);
+
         speech=new TextToSpeech(this, new TextToSpeech.OnInitListener() {
 
             @Override
@@ -109,8 +122,6 @@ public class WifiJobService extends Service {
             selectedWifi = sharedPreferences.getString(WifiSettingActivity.SELECTED_WIFI, "");
         receiver.registerState();
 
-        //PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
-        //wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "TAG");
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         filter.addAction(Intent.ACTION_SCREEN_ON);
@@ -146,9 +157,58 @@ public class WifiJobService extends Service {
         }
     }
 
+
     private class SleepReceiver extends BroadcastReceiver{
 
         private static final long WAIT_FOR_SYS_CLEAN_UP_DELAY = 1000;
+        private final SensorManager sensorManager =
+                (SensorManager) getSystemService(SENSOR_SERVICE);
+        // significant motion sensor is wake up sensor, it does not do batch sensor, waitless
+        private final Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION);
+        private final TriggerEventListener mListener = new TriggerEventListener() {
+            @Override
+            public void onTrigger(TriggerEvent event) {
+                WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+                if(wifiInfo == null)
+                {
+                    sensorManager.requestTriggerSensor(mListener, sensor);
+                    return;
+                }
+
+                //int rssi = wifiManager.getConnectionInfo().getRssi();
+                int rssi = wifiInfo.getRssi();
+                int level = WifiManager.calculateSignalLevel(rssi, 100);
+                level /= 100.0;
+
+                if(level<0.4 && !reminderTriggered) {
+                    speech.speak("主人，别忘了带钥匙", TextToSpeech.QUEUE_FLUSH, null);
+
+                    PendingIntent mainIntent = PendingIntent.getActivity(getBaseContext(), 0, new Intent(getBaseContext(), MainActivity.class), 0);
+                    NotificationCompat.Builder notifyBuilder = new NotificationCompat.Builder(getBaseContext())
+                            .setContentTitle("Friendly Reminder")
+                            .setContentText("主人，别忘了带钥匙")
+                            .setTicker("ticker")
+                            .setSmallIcon(R.drawable.ic_stat_event)
+                            .setAutoCancel(true);
+                    notifyBuilder.setContentIntent(mainIntent);
+                    notifyBuilder.setDefaults(NotificationCompat.DEFAULT_VIBRATE);
+                    NotificationManager notificationManager = (NotificationManager)
+                            getSystemService(Context.NOTIFICATION_SERVICE);
+                    try {
+                        notificationManager.notify(NOTIFY_ID, notifyBuilder.build());
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.e(TAG, "notify error", ex);
+                    }
+
+                    reminderTriggered = true;
+                }
+                if(reminderTriggered && level > 0.6)
+                    reminderTriggered = false;
+                boolean success = sensorManager.requestTriggerSensor(mListener, sensor);
+            }
+        };
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -156,12 +216,13 @@ public class WifiJobService extends Service {
                 return;
             if(intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
                 Runnable runnable = new Runnable() {
-                    @Override
-                    public void run() {
-//                    receiver.unregisterState();
+                        @Override
+                        public void run() {
+                            receiver.unregisterState();
+                            receiver.unregisterSignal();
 //                    receiver.registerState();
-                        scheduleAlarm();
-                    }
+                    boolean success = sensorManager.requestTriggerSensor(mListener, sensor);
+                        }
                 };
                 new Handler().postDelayed(runnable, WAIT_FOR_SYS_CLEAN_UP_DELAY);
             }
@@ -169,9 +230,10 @@ public class WifiJobService extends Service {
                 Runnable runnable = new Runnable() {
                     @Override
                     public void run() {
-//                    receiver.unregisterState();
-//                    receiver.registerState();
-                        cancelAlarm();
+                      receiver.unregisterState();
+                      receiver.registerState();
+//                        cancelAlarm();
+                        sensorManager.cancelTriggerSensor(mListener, sensor);
                     }
                 };
                 new Handler().post(runnable);
@@ -215,8 +277,6 @@ public class WifiJobService extends Service {
             IntentFilter intentFilter = new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION);
             mIsStateReceiverRegistered = true;
             return registerReceiver(this, intentFilter);
-            //LocalBroadcastManager.getInstance(getBaseContext()).registerReceiver(this, intentFilter);
-
         }
         //public void registerSignal()
         public Intent registerSignal()
@@ -227,7 +287,6 @@ public class WifiJobService extends Service {
             IntentFilter intentFilter = new IntentFilter(WifiManager.RSSI_CHANGED_ACTION);
             mIsSigReceiverRegistered = true;
             return registerReceiver(this, intentFilter);
-            //LocalBroadcastManager.getInstance(getBaseContext()).registerReceiver(this, intentFilter);
         }
 
         public void unregisterState()
