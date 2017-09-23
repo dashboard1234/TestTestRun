@@ -51,6 +51,7 @@ public class WifiJobService extends Service {
     WifiReceiver receiver;
     String selectedWifi = "";
     boolean reminderTriggered;
+    boolean connectedToHomeWifi;
     TextToSpeech speech;
     JobParameters jobParameters;
     private SleepReceiver sleepReceiver;
@@ -94,6 +95,7 @@ public class WifiJobService extends Service {
         receiver = new WifiReceiver();
         sleepReceiver = new SleepReceiver();
         reminderTriggered = false;
+        connectedToHomeWifi = false;
 
         sensorManager =
                 (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -131,10 +133,8 @@ public class WifiJobService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        //isStopTimer = true;
         receiver.unregisterState();
         speech.shutdown();
-        //jobFinished(jobParameters, false);
     }
 
     public class RepeatOnSleep extends IntentService{
@@ -168,19 +168,22 @@ public class WifiJobService extends Service {
         private final TriggerEventListener mListener = new TriggerEventListener() {
             @Override
             public void onTrigger(TriggerEvent event) {
+                // if not connected to home wifi, don't keep triggering motion movement to drain power
+                if(!connectedToHomeWifi)
+                    return;
                 WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-                if(wifiInfo == null)
+                if(wifiInfo == null || !connectedToHomeWifi)
                 {
-                    sensorManager.requestTriggerSensor(mListener, sensor);
                     return;
                 }
 
-                //int rssi = wifiManager.getConnectionInfo().getRssi();
                 int rssi = wifiInfo.getRssi();
                 int level = WifiManager.calculateSignalLevel(rssi, 100);
                 level /= 100.0;
 
-                if(level<0.4 && !reminderTriggered) {
+//                if(level<0.4 && !reminderTriggered) {
+                // movement sensor is not sensitive when soc is asleep, set threshold lower
+                if(level<0.35) {
                     speech.speak("主人，别忘了带钥匙", TextToSpeech.QUEUE_FLUSH, null);
 
                     PendingIntent mainIntent = PendingIntent.getActivity(getBaseContext(), 0, new Intent(getBaseContext(), MainActivity.class), 0);
@@ -202,10 +205,10 @@ public class WifiJobService extends Service {
                         Log.e(TAG, "notify error", ex);
                     }
 
-                    reminderTriggered = true;
+//                    reminderTriggered = true;
                 }
-                if(reminderTriggered && level > 0.6)
-                    reminderTriggered = false;
+//                if(reminderTriggered && level > 0.6)
+//                    reminderTriggered = false;
                 boolean success = sensorManager.requestTriggerSensor(mListener, sensor);
             }
         };
@@ -218,8 +221,8 @@ public class WifiJobService extends Service {
                 Runnable runnable = new Runnable() {
                         @Override
                         public void run() {
-                            receiver.unregisterState();
-                            receiver.unregisterSignal();
+//                            receiver.unregisterState();
+//                            receiver.unregisterSignal();
 //                    receiver.registerState();
                     boolean success = sensorManager.requestTriggerSensor(mListener, sensor);
                         }
@@ -230,9 +233,8 @@ public class WifiJobService extends Service {
                 Runnable runnable = new Runnable() {
                     @Override
                     public void run() {
-                      receiver.unregisterState();
-                      receiver.registerState();
-//                        cancelAlarm();
+//                      receiver.unregisterState();
+//                      receiver.registerState();
                         sensorManager.cancelTriggerSensor(mListener, sensor);
                     }
                 };
@@ -241,48 +243,22 @@ public class WifiJobService extends Service {
         }
     }
 
-    private void scheduleAlarm() {
-        Intent intent = new Intent(getApplicationContext(), RepeatOnSleep.class);
-        // Create a PendingIntent to be triggered when the alarm goes off
-        final PendingIntent pIntent = PendingIntent.getService(this, RepeatOnSleep.REQUEST_CODE,
-                intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        long firstMillis = System.currentTimeMillis(); // alarm is set right away
-        AlarmManager alarm = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-
-//        alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, firstMillis,
-//                10000, pIntent);
-        alarm.setRepeating(AlarmManager.RTC, firstMillis,
-                10000, pIntent);
-    }
-
-    private void cancelAlarm() {
-        Intent intent = new Intent(getApplicationContext(), RepeatOnSleep.class);
-        final PendingIntent pIntent = PendingIntent.getService(this, RepeatOnSleep.REQUEST_CODE,
-                intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        AlarmManager alarm = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-        alarm.cancel(pIntent);
-    }
-
     private class WifiReceiver extends BroadcastReceiver {
-        //private BroadcastReceiver receiver = new BroadcastReceiver(){
         boolean mIsSigReceiverRegistered;
         boolean mIsStateReceiverRegistered;
 
-        //public void registerState()
         public  Intent registerState()
         {
             if(mIsStateReceiverRegistered)
-                //    return;
                 return null;
             IntentFilter intentFilter = new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION);
             mIsStateReceiverRegistered = true;
             return registerReceiver(this, intentFilter);
         }
-        //public void registerSignal()
+
         public Intent registerSignal()
         {
             if(mIsSigReceiverRegistered)
-                //   return;
                 return null;
             IntentFilter intentFilter = new IntentFilter(WifiManager.RSSI_CHANGED_ACTION);
             mIsSigReceiverRegistered = true;
@@ -355,16 +331,17 @@ public class WifiJobService extends Service {
                         String connectedWifiName = getWifiNetworkName(context);
                         if (!TextUtils.isEmpty(selectedWifi) && !selectedWifi.equals(connectedWifiName)) {
                             unregisterSignal();
-                            //break;
+                            connectedToHomeWifi = false;
                         }
                         else if(!TextUtils.isEmpty(selectedWifi) && selectedWifi.equals(connectedWifiName)) {
                             unregisterSignal();
                             registerSignal();
-                            //break;
+                            connectedToHomeWifi = true;
                         }
                     }
                     else {
                         unregisterSignal();
+                        connectedToHomeWifi = false;
                     }
                     break;
                 default:
